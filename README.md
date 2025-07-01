@@ -1,6 +1,6 @@
 ## Master AI Agentic Engineering -  build autonomous AI Agents
 
-### 6 week journey to code and deploy AI Agents with OpenAI Agents SDK, CrewAI, LangGraph, AutoGen and MCP
+#### As a part of my 6 week journey to code and deploy AI Agents with OpenAI Agents SDK, CrewAI, LangGraph, AutoGen and MCP, this repo is forked from https://github.com/ed-donner/agents
 
 ![Autonomous Agent](assets/autonomy.png)
 
