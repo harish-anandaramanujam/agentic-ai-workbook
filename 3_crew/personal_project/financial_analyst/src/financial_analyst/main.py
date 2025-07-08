@@ -15,7 +15,7 @@ def run():
     }
 
     crew = FinancialAnalyst().crew().kickoff(inputs=inputs)
-    print(crew.raw_output)
+    print(crew.tasks_output)
 
 if __name__ == "__main__":
     run()
