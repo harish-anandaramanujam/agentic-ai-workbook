@@ -1,8 +1,8 @@
 # src/research_crew/config/tasks.yaml
 research_task:
   description: >
-    Conduct thorough research on company {company}. Focus on:
-    1. Current company status and health
+    Conduct thorough research on company {company} as of 2025. Focus on:
+    1. Current company status and health as of 2025
     2. Historical company performance
     3. Major challenges and opportunities
     4. Recent news and events
@@ -17,7 +17,7 @@ research_task:
 
 analysis_task:
   description: >
-    Analyze the research findings and create a comprehensive report on {company}.
+    Analyze the research findings and create a comprehensive report on {company} as of 2025.
     Your report should:
     1. Begin with an executive summary
     2. Include all key information from the research
