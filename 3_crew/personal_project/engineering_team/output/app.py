@@ -1,94 +1,120 @@
 import gradio as gr
-from accounts import Account, get_share_price
+from accounts import Account
 
+# Initialize global account variable
 account = None
 
-def create_account(username, initial_deposit):
+def create_account(account_id: str, initial_deposit: float):
     global account
-    account = Account(username, initial_deposit)
-    return f"Account for {username} created with initial deposit ${initial_deposit:.2f}."
+    try:
+        account = Account(account_id, initial_deposit)
+        return f"Account {account_id} created with initial deposit of {initial_deposit}."
+    except ValueError as e:
+        return str(e)
 
-def deposit_funds(amount):
-    global account
-    account.deposit(amount)
-    return f"Deposited: ${amount:.2f}. Current balance: ${account.balance:.2f}."
+def deposit_funds(amount: float):
+    if account is None:
+        return "No account found. Please create an account first."
+    try:
+        account.deposit(amount)
+        return f"Deposited {amount}. Current balance: {account.balance}"
+    except ValueError as e:
+        return str(e)
 
-def withdraw_funds(amount):
-    global account
+def withdraw_funds(amount: float):
+    if account is None:
+        return "No account found. Please create an account first."
     try:
         account.withdraw(amount)
-        return f"Withdrew: ${amount:.2f}. Current balance: ${account.balance:.2f}."
+        return f"Withdrew {amount}. Current balance: {account.balance}"
     except ValueError as e:
         return str(e)
 
-def buy_shares(symbol, quantity):
-    global account
+def buy_shares(symbol: str, quantity: int):
+    if account is None:
+        return "No account found. Please create an account first."
     try:
         account.buy_shares(symbol, quantity)
-        return f"Bought {quantity} shares of {symbol}. Current balance: ${account.balance:.2f}."
+        return f"Bought {quantity} of {symbol}. Current balance: {account.balance}"
     except ValueError as e:
         return str(e)
 
-def sell_shares(symbol, quantity):
-    global account
+def sell_shares(symbol: str, quantity: int):
+    if account is None:
+        return "No account found. Please create an account first."
     try:
         account.sell_shares(symbol, quantity)
-        return f"Sold {quantity} shares of {symbol}. Current balance: ${account.balance:.2f}."
+        return f"Sold {quantity} of {symbol}. Current balance: {account.balance}"
     except ValueError as e:
         return str(e)
 
-def report_holdings():
-    global account
-    return account.report_holdings()
+def get_portfolio():
+    if account is None:
+        return "No account found. Please create an account first."
+    return account.get_holdings()
 
-def report_profit_loss():
-    global account
-    return f"Current profit/loss: ${account.report_profit_loss():.2f}."
+def get_profit_loss():
+    if account is None:
+        return "No account found. Please create an account first."
+    profit_loss = account.get_profit_or_loss()
+    return f"Profit or Loss: {profit_loss}"
 
-def list_transactions():
-    global account
-    return account.list_transactions()
+def get_transaction_history():
+    if account is None:
+        return "No account found. Please create an account first."
+    return account.get_transaction_history()
 
+# Gradio interface setup
 with gr.Blocks() as demo:
-    gr.Markdown("# Trading Account Management")
-    username = gr.Textbox(label="Username")
-    initial_deposit = gr.Number(label="Initial Deposit", value=1000)
-    create_btn = gr.Button("Create Account")
-    create_output = gr.Textbox(label="Creation Output", interactive=False)
+    gr.Markdown("## Trading Simulation Account Management")
 
-    deposit_amount = gr.Number(label="Deposit Amount")
-    deposit_btn = gr.Button("Deposit Funds")
-    deposit_output = gr.Textbox(label="Deposit Output", interactive=False)
+    with gr.Tab("Create Account"):
+        account_id_input = gr.Textbox(label="Account ID")
+        initial_deposit_input = gr.Number(label="Initial Deposit")
+        create_account_button = gr.Button("Create Account")
+        create_account_output = gr.Textbox(label="Output")
+        create_account_button.click(create_account, [account_id_input, initial_deposit_input], create_account_output)
+        
+    with gr.Tab("Deposit Funds"):
+        amount_input_deposit = gr.Number(label="Amount to Deposit")
+        deposit_button = gr.Button("Deposit")
+        deposit_output = gr.Textbox(label="Output")
+        deposit_button.click(deposit_funds, [amount_input_deposit], deposit_output)
 
-    withdraw_amount = gr.Number(label="Withdraw Amount")
-    withdraw_btn = gr.Button("Withdraw Funds")
-    withdraw_output = gr.Textbox(label="Withdrawal Output", interactive=False)
+    with gr.Tab("Withdraw Funds"):
+        amount_input_withdraw = gr.Number(label="Amount to Withdraw")
+        withdraw_button = gr.Button("Withdraw")
+        withdraw_output = gr.Textbox(label="Output")
+        withdraw_button.click(withdraw_funds, [amount_input_withdraw], withdraw_output)
 
-    symbol = gr.Textbox(label="Stock Symbol (AAPL, TSLA, GOOGL)")
-    buy_quantity = gr.Number(label="Buy Quantity")
-    buy_btn = gr.Button("Buy Shares")
-    buy_output = gr.Textbox(label="Buy Output", interactive=False)
+    with gr.Tab("Buy Shares"):
+        symbol_input_buy = gr.Textbox(label="Symbol")
+        quantity_input_buy = gr.Number(label="Quantity")
+        buy_button = gr.Button("Buy")
+        buy_output = gr.Textbox(label="Output")
+        buy_button.click(buy_shares, [symbol_input_buy, quantity_input_buy], buy_output)
 
-    sell_quantity = gr.Number(label="Sell Quantity")
-    sell_btn = gr.Button("Sell Shares")
-    sell_output = gr.Textbox(label="Sell Output", interactive=False)
+    with gr.Tab("Sell Shares"):
+        symbol_input_sell = gr.Textbox(label="Symbol")
+        quantity_input_sell = gr.Number(label="Quantity")
+        sell_button = gr.Button("Sell")
+        sell_output = gr.Textbox(label="Output")
+        sell_button.click(sell_shares, [symbol_input_sell, quantity_input_sell], sell_output)
 
-    holdings_btn = gr.Button("Report Holdings")
-    holdings_output = gr.Textbox(label="Current Holdings", interactive=False)
-    
-    profit_loss_btn = gr.Button("Report Profit/Loss")
-    profit_loss_output = gr.Textbox(label="Profit/Loss", interactive=False)
+    with gr.Tab("View Portfolio"):
+        portfolio_button = gr.Button("Get Portfolio")
+        portfolio_output = gr.Textbox(label="Portfolio")
+        portfolio_button.click(get_portfolio, [], portfolio_output)
 
-    transactions_btn = gr.Button("List Transactions")
-    transactions_output = gr.Textbox(label="Transactions", interactive=False)
+    with gr.Tab("Profit or Loss"):
+        profit_loss_button = gr.Button("Get Profit or Loss")
+        profit_loss_output = gr.Textbox(label="Profit or Loss")
+        profit_loss_button.click(get_profit_loss, [], profit_loss_output)
 
-    create_btn.click(create_account, inputs=[username, initial_deposit], outputs=create_output)
-    deposit_btn.click(deposit_funds, inputs=deposit_amount, outputs=deposit_output)
-    withdraw_btn.click(withdraw_funds, inputs=withdraw_amount, outputs=withdraw_output)
-    buy_btn.click(buy_shares, inputs=[symbol, buy_quantity], outputs=buy_output)
-    sell_btn.click(sell_shares, inputs=[symbol, sell_quantity], outputs=sell_output)
-    holdings_btn.click(report_holdings, outputs=holdings_output)
-    profit_loss_btn.click(report_profit_loss, outputs=profit_loss_output)
-    transactions_btn.click(list_transactions, outputs=transactions_output)
+    with gr.Tab("Transaction History"):
+        transaction_history_button = gr.Button("Get Transaction History")
+        transaction_history_output = gr.Textbox(label="Transaction History")
+        transaction_history_button.click(get_transaction_history, [], transaction_history_output)
 
+# Launch the Gradio demo
 demo.launch()

@@ -1,1 +1,77 @@
-class Account:\n    def __init__(self, username: str, initial_deposit: float):\n        \"\"\"\n        Initializes a new account for the user.\n        \n        :param username: The name of the user.\n        :param initial_deposit: The initial amount of money to be deposited into the account.\n        \"\"\"\n        self.username = username\n        self.balance = initial_deposit\n        self.holdings = {}  # Dictionary to hold the shares and their quantities\n        self.transactions = []  # List to keep track of transactions\n\n    def deposit(self, amount: float):\n        \"\"\"\n        Deposits funds into the account.\n        \n        :param amount: The amount to deposit.\n        \"\"\"\n        self.balance += amount\n        self.transactions.append(f\"Deposited: ${amount:.2f}\")\n\n    def withdraw(self, amount: float):\n        \"\"\"\n        Withdraws funds from the account if sufficient balance exists.\n        \n        :param amount: The amount to withdraw.\n        :raises ValueError: If the withdrawal would leave a negative balance.\n        \"\"\"\n        if self.balance - amount < 0:\n            raise ValueError(\"Insufficient funds for withdrawal.\")\n        self.balance -= amount\n        self.transactions.append(f\"Withdrew: ${amount:.2f}\")\n\n    def buy_shares(self, symbol: str, quantity: int):\n        \"\"\"\n        Buys shares of a specified symbol if sufficient funds are available.\n        \n        :param symbol: The stock symbol to purchase shares of.\n        :param quantity: The number of shares to buy.\n        :raises ValueError: If not enough funds to buy the shares or if quantity is less than 1.\n        \"\"\"\n        share_price = get_share_price(symbol)\n        total_cost = share_price * quantity\n        if total_cost > self.balance:\n            raise ValueError(\"Insufficient funds to buy shares.\")\n        if quantity < 1:\n            raise ValueError(\"Quantity must be at least 1.\")\n        \n        # Update holdings and balance\n        self.holdings[symbol] = self.holdings.get(symbol, 0) + quantity\n        self.balance -= total_cost\n        self.transactions.append(f\"Bought {quantity} shares of {symbol} at ${share_price:.2f} each.\")\n\n    def sell_shares(self, symbol: str, quantity: int):\n        \"\"\"\n        Sells shares of a specified symbol if sufficient shares are owned.\n        \n        :param symbol: The stock symbol to sell shares of.\n        :param quantity: The number of shares to sell.\n        :raises ValueError: If not enough shares to sell or if quantity is less than 1.\n        \"\"\"\n        if symbol not in self.holdings or self.holdings[symbol] < quantity:\n            raise ValueError(\"Not enough shares to sell.\")\n        if quantity < 1:\n            raise ValueError(\"Quantity must be at least 1.\")\n        \n        share_price = get_share_price(symbol)\n        total_value = share_price * quantity\n        \n        # Update holdings and balance\n        self.holdings[symbol] -= quantity\n        self.balance += total_value\n        self.transactions.append(f\"Sold {quantity} shares of {symbol} at ${share_price:.2f} each.\")\n\n    def portfolio_value(self) -> float:\n        \"\"\"\n        Calculates the total value of the user's portfolio.\n        \n        :return: The total value of the portfolio including cash and share holdings.\n        \"\"\"\n        total_value = self.balance\n        for symbol, quantity in self.holdings.items():\n            total_value += get_share_price(symbol) * quantity\n        return total_value\n\n    def profit_loss(self) -> float:\n        \"\"\"\n        Calculates the profit or loss from the initial deposit.\n        \n        :return: The profit/loss amount.\n        \"\"\"\n        return self.portfolio_value() - self.balance - sum(get_share_price(sym) * qty for sym, qty in self.holdings.items())\n\n    def report_holdings(self) -> dict:\n        \"\"\"\n        Reports the current holdings of the user.\n        \n        :return: A dictionary of symbols and their corresponding quantities owned.\n        \"\"\"\n        return self.holdings\n\n    def report_profit_loss(self) -> float:\n        \"\"\"\n        Reports the current profit or loss of the user.\n        \n        :return: The profit/loss amount.\n        \"\"\"\n        return self.profit_loss()\n\n    def list_transactions(self) -> list:\n        \"\"\"\n        Lists all transactions made by the user.\n        \n        :return: A list of transaction strings.\n        \"\"\"\n        return self.transactions\n\n\ndef get_share_price(symbol: str) -> float:\n    \"\"\"\n    Mock function to return share prices based on stock symbols.\n    \n    :param symbol: The stock symbol to look up.\n    :return: The price of the share.\n    \"\"\"\n    prices = {\n        \"AAPL\": 150.00,\n        \"TSLA\": 600.00,\n        \"GOOGL\": 2800.00,\n    }\n    return prices.get(symbol, 0.0)  # Return 0.0 for unknown symbols
+class Account:
+    def __init__(self, account_id: str, initial_deposit: float):
+        if initial_deposit < 0:
+            raise ValueError("Initial deposit cannot be negative.")
+        self.account_id = account_id
+        self.balance = initial_deposit
+        self.initial_deposit = initial_deposit
+        self.transactions = [(self._current_time(), 'DEPOSIT', 'Initial deposit', initial_deposit)]
+        self.holdings = {}
+
+    def deposit(self, amount: float) -> None:
+        if amount <= 0:
+            raise ValueError("Deposit amount must be positive.")
+        self.balance += amount
+        self.transactions.append((self._current_time(), 'DEPOSIT', '', amount))
+
+    def withdraw(self, amount: float) -> None:
+        if amount <= 0:
+            raise ValueError("Withdrawal amount must be positive.")
+        if amount > self.balance:
+            raise ValueError("Insufficient funds.")
+        self.balance -= amount
+        self.transactions.append((self._current_time(), 'WITHDRAW', '', amount))
+
+    def buy_shares(self, symbol: str, quantity: int) -> None:
+        if quantity <= 0:
+            raise ValueError("Quantity must be positive.")
+        price = self.get_share_price(symbol)
+        total_cost = price * quantity
+        if total_cost > self.balance:
+            raise ValueError("Insufficient funds to buy shares.")
+        self.balance -= total_cost
+        if symbol in self.holdings:
+            self.holdings[symbol] += quantity
+        else:
+            self.holdings[symbol] = quantity
+        self.transactions.append((self._current_time(), 'BUY', f"{quantity} {symbol}", total_cost))
+
+    def sell_shares(self, symbol: str, quantity: int) -> None:
+        if quantity <= 0:
+            raise ValueError("Quantity must be positive.")
+        if symbol not in self.holdings or self.holdings[symbol] < quantity:
+            raise ValueError("Insufficient shares to sell.")
+        price = self.get_share_price(symbol)
+        total_proceeds = price * quantity
+        self.holdings[symbol] -= quantity
+        if self.holdings[symbol] == 0:
+            del self.holdings[symbol]
+        self.balance += total_proceeds
+        self.transactions.append((self._current_time(), 'SELL', f"{quantity} {symbol}", total_proceeds))
+
+    def get_portfolio_value(self) -> float:
+        holdings_value = sum(self.get_share_price(symbol) * qty for symbol, qty in self.holdings.items())
+        return self.balance + holdings_value
+
+    def get_profit_or_loss(self) -> float:
+        return self.get_portfolio_value() - self.initial_deposit
+
+    def get_holdings(self) -> dict:
+        return dict(self.holdings)
+
+    def get_transaction_history(self) -> list:
+        return list(self.transactions)
+
+    @staticmethod
+    def get_share_price(symbol: str) -> float:
+        prices = {
+            'AAPL': 150.0,
+            'TSLA': 600.0,
+            'GOOGL': 2800.0,
+        }
+        return prices.get(symbol.upper(), 0.0)
+
+    @staticmethod
+    def _current_time():
+        from datetime import datetime
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
