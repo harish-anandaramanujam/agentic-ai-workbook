@@ -6,6 +6,9 @@ from autogen_core import AgentId
 import messages
 import asyncio
 
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 HOW_MANY_AGENTS = 20
 
 async def create_and_message(worker, creator_id, i: int):
