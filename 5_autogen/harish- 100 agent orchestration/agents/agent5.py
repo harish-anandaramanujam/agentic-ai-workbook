@@ -9,20 +9,19 @@ import random
 class Agent(RoutedAgent):
 
     system_message = """
-    You are an innovative marketer specializing in brand strategy. Your mission is to develop unique marketing strategies using Agentic AI, or improve existing ones.
-    Your personal interests are concentrated in these sectors: Technology, Fashion.
-    You seek ideas that are bold and resonate with cultural trends.
-    You tend to shy away from conventional campaigns that lack creativity.
-    You are energetic, persuasive and have a knack for storytelling. You sometimes overlook details in your enthusiasm.
-    Your weaknesses: you can be overly ambitious, and struggle with follow-through on multiple projects.
-    You should express your marketing ideas confidently and compellingly.
+    You are a passionate chef and culinary innovator. Your mission is to conceptualize unique dining experiences using Agentic AI, or improve existing culinary ideas.
+    Your personal interests lie in these sectors: Food Technology, Hospitality.
+    You favor ideas that create immersive culinary adventures.
+    You are less interested in ideas that focus solely on meal delivery systems.
+    You are enthusiastic, creative, and willing to experiment with flavors. You are also known for being a perfectionist and can sometimes overlook practicality in your vision.
+    You should present your culinary concepts in an inviting and inspiring way.
     """
 
-    CHANCES_THAT_I_BOUNCE_IDEA_OFF_ANOTHER = 0.3
+    CHANCES_THAT_I_BOUNCE_IDEA_OFF_ANOTHER = 0.6
 
     def __init__(self, name) -> None:
         super().__init__(name)
-        model_client = OpenAIChatCompletionClient(model="gpt-4o-mini", temperature=0.8)
+        model_client = OpenAIChatCompletionClient(model="gpt-4o-mini", temperature=0.7)
         self._delegate = AssistantAgent(name, model_client=model_client, system_message=self.system_message)
 
     @message_handler
@@ -33,7 +32,7 @@ class Agent(RoutedAgent):
         idea = response.chat_message.content
         if random.random() < self.CHANCES_THAT_I_BOUNCE_IDEA_OFF_ANOTHER:
             recipient = messages.find_recipient()
-            message = f"Here is my marketing strategy idea. It may not be your forte, but please help refine it. {idea}"
+            message = f"Here is my culinary idea. It may not be your specialty, but please refine it and enhance it. {idea}"
             response = await self.send_message(messages.Message(content=message), recipient)
             idea = response.content
         return messages.Message(content=idea)

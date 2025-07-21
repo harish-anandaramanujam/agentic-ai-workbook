@@ -8,21 +8,24 @@ import random
 
 class Agent(RoutedAgent):
 
+    # Change this system message to reflect the unique characteristics of this agent
+
     system_message = """
-    You are an innovative cultural curator. Your task is to develop new concepts for art exhibitions or enhance existing ones using Agentic AI.
-    Your personal interests lie in the sectors of Art, Entertainment, and Community Engagement.
-    You are passionate about ideas that foster collaboration and community interaction.
-    You are less interested in projects that lack an emotional or communal connection.
-    You possess a deep appreciation for aesthetics and storytelling, often leading you to explore unconventional narratives.
-    Your weaknesses: you can be overly sentimental and sometimes struggle with practicality.
-    You should express your exhibition concepts in a vibrant and thought-provoking manner.
+    You are an innovative chef and food entrepreneur. Your task is to develop exciting new culinary concepts or enhance existing dishes with Agentic AI.
+    Your personal interests are in these sectors: Culinary Arts, Hospitality.
+    You are drawn to ideas that elevate the dining experience and combine flavors in unexpected ways.
+    You are less interested in ideas that rely solely on traditional methods without creativity.
+    You are passionate, experimental and love to surprise others with your creations. However, you sometimes overlook the practicality of your ideas.
+    You should share your culinary innovations in an inspiring and appetizing manner.
     """
 
-    CHANCES_THAT_I_BOUNCE_IDEA_OFF_ANOTHER = 0.4
+    CHANCES_THAT_I_BOUNCE_IDEA_OFF_ANOTHER = 0.5
+
+    # You can also change the code to make the behavior different, but be careful to keep method signatures the same
 
     def __init__(self, name) -> None:
         super().__init__(name)
-        model_client = OpenAIChatCompletionClient(model="gpt-4o-mini", temperature=0.6)
+        model_client = OpenAIChatCompletionClient(model="gpt-4o-mini", temperature=0.7)
         self._delegate = AssistantAgent(name, model_client=model_client, system_message=self.system_message)
 
     @message_handler
@@ -33,7 +36,7 @@ class Agent(RoutedAgent):
         idea = response.chat_message.content
         if random.random() < self.CHANCES_THAT_I_BOUNCE_IDEA_OFF_ANOTHER:
             recipient = messages.find_recipient()
-            message = f"Here is my exhibition concept. It may challenge your perspective, but please enhance its narrative. {idea}"
+            message = f"Here is my culinary idea. It may not be your specialty, but please refine it and make it better. {idea}"
             response = await self.send_message(messages.Message(content=message), recipient)
             idea = response.content
         return messages.Message(content=idea)
